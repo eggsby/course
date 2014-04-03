@@ -142,6 +142,13 @@ filter ::
   -> List a
 filter p xs = foldRight (\x ys -> if p x then x :. ys else ys) Nil xs
 
+
+remove ::
+  (a -> Bool)
+  -> List a
+  -> List a
+remove p xs = filter (\x -> if p x then False else True) xs
+
 -- | Append two lists to a new list.
 --
 -- >>> (1 :. 2 :. 3 :. Nil) ++ (4 :. 5 :. 6 :. Nil)
@@ -191,8 +198,18 @@ flatMap ::
   (a -> List b)
   -> List a
   -> List b
-flatMap =
-  error "todo"
+flatMap f xs = flatten (map f xs)
+
+exists ::
+  Optional a
+  -> Bool
+exists (Full x) = True
+exists Empty = False
+
+getOptional ::
+  Optional a
+  -> a
+getOptional (Full x) = x
 
 -- | Convert a list of optional values to an optional list of values.
 --
@@ -219,8 +236,10 @@ flatMap =
 seqOptional ::
   List (Optional a)
   -> Optional (List a)
-seqOptional =
-  error "todo"
+seqOptional x =
+  case remove exists x of
+    Nil -> Full (map getOptional x)
+    _   -> Empty
 
 -- | Find the first element in the list matching the predicate.
 --
@@ -242,8 +261,10 @@ find ::
   (a -> Bool)
   -> List a
   -> Optional a
-find =
-  error "todo"
+find p x =
+  case filter p x of
+    Nil    -> Empty
+    h :. _ -> Full h
 
 -- | Determine if the length of the given list is greater than 4.
 --
@@ -261,8 +282,8 @@ find =
 lengthGT4 ::
   List a
   -> Bool
-lengthGT4 =
-  error "todo"
+lengthGT4 (_ :. _ :. _ :. _ :. _) = True
+lengthGT4 _ = False
 
 -- | Reverse a list.
 --
@@ -275,8 +296,8 @@ lengthGT4 =
 reverse ::
   List a
   -> List a
-reverse =
-  error "todo"
+reverse xs =
+  foldLeft (\ys x -> x :. ys) Nil xs
 
 -- | Produce an infinite `List` that seeds with the given value at its head,
 -- then runs the given function for subsequent elements
@@ -290,8 +311,7 @@ produce ::
   (a -> a)
   -> a
   -> List a
-produce =
-  error "todo"
+produce f x = x :. (produce f (f x))
 
 -- | Do anything other than reverse a list.
 -- Is it even possible?
@@ -305,8 +325,7 @@ produce =
 notReverse ::
   List a
   -> List a
-notReverse =
-  error "todo"
+notReverse xs = reverse xs
 
 hlist ::
   List a
